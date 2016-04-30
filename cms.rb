@@ -112,6 +112,11 @@ post "/create" do
     session[:message] = "A name is required"
     status 422
     erb :new
+  elsif ![".txt", ".md"].include?(File.extname(filename))
+    session[:message] = "That file type is not supported"
+    status 422
+    erb :new
+
   else
     file_path = File.join(data_path, filename)
     File.write(file_path, "")
@@ -160,4 +165,8 @@ post "/:filename/delete" do
   File.delete(file_path)
   session[:message] = "#{params[:filename]} has been deleted"
   redirect "/"
+end
+
+get "/test/dave" do
+  "testing #{length}"
 end
