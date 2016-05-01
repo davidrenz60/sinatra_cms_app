@@ -205,6 +205,12 @@ class AppTest < Minitest::Test
     assert_includes last_response.body, "You have been signed out"
     assert_includes last_response.body, "Sign In"
   end
+
+  def test_create_not_supported_file_type
+    post "/create", { filename: "test.abc" }, admin_session
+    assert_equal 422, last_response.status
+    assert_includes last_response.body, "That file type is not supported"
+  end
 end
 
 
