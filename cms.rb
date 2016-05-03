@@ -93,7 +93,7 @@ end
 
 post "/users/signup" do
   username = params[:username]
-  credentials = load_user_credentials # YAML.load_file based on env
+  credentials = load_user_credentials
 
   if params[:password].size == 0 || username.size == 0
     session[:message] = "A username and password is required"
@@ -101,7 +101,7 @@ post "/users/signup" do
   elsif credentials.key?(username)
     session[:message] = "Username taken. Please choose a new username"
     erb :signup
-  else # not adding user to yaml file
+  else
     password = BCrypt::Password.create(params[:password])
     credentials[username] = password
 
