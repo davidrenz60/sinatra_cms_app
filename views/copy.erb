@@ -1,0 +1,12 @@
+<form action = "/copy" method="post">
+	<label for ="filename">Enter new filename:</label>
+	<div>
+		<input name="filename" id="filename">
+	</div>
+
+	<label for ="content">Edit content:</label>
+	<div>
+		<textarea name="content" id="content" rows="20" cols ="100"><%= @content %></textarea>
+	</div>
+		<button type="submit">Create file</button>
+</form>

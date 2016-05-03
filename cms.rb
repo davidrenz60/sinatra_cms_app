@@ -4,6 +4,7 @@ require "tilt/erubis"
 require "redcarpet"
 require "yaml"
 require "bcrypt"
+require "fileutils"
 
 configure do
   enable :sessions
@@ -45,12 +46,15 @@ def require_signed_in_user
   end
 end
 
+def credentials_path
+  if ENV["RACK_ENV"] == "test"
+    File.expand_path("../test/users.yml", __FILE__)
+  else
+    File.expand_path("../users.yml", __FILE__)
+  end
+end
+
 def load_user_credentials
-  credentials_path = if ENV["RACK_ENV"] == "test"
-                       File.expand_path("../test/users.yml", __FILE__)
-                     else
-                       File.expand_path("../users.yml", __FILE__)
-                     end
   YAML.load_file(credentials_path)
 end
 
@@ -83,6 +87,30 @@ get "/users/signin" do
   erb :signin
 end
 
+get "/users/signup" do
+  erb :signup
+end
+
+post "/users/signup" do
+  username = params[:username]
+  credentials = load_user_credentials # YAML.load_file based on env
+
+  if params[:password].size == 0 || username.size == 0
+    session[:message] = "A username and password is required"
+    erb :signup
+  elsif credentials.key?(username)
+    session[:message] = "Username taken. Please choose a new username"
+    erb :signup
+  else # not adding user to yaml file
+    password = BCrypt::Password.create(params[:password])
+    credentials[username] = password
+
+    File.open(credentials_path, 'w') { |f| f.write credentials.to_yaml }
+    session[:message] = "Account created. Please sign in."
+    redirect "/"
+  end
+end
+
 post "/users/signin" do
   username = params[:username]
 
@@ -107,18 +135,46 @@ post "/create" do
   require_signed_in_user
 
   filename = params[:filename].to_s
+  file_path = File.join(data_path, params[:filename])
 
   if filename.size == 0
     session[:message] = "A name is required"
+    status 422
+    erb :new
+  elsif File.exist?(file_path)
+    session[:message] = "File name in use. Choose a new name."
     status 422
     erb :new
   elsif ![".txt", ".md"].include?(File.extname(filename))
     session[:message] = "That file type is not supported"
     status 422
     erb :new
-
   else
-    file_path = File.join(data_path, filename)
+    File.write(file_path, "")
+    session[:message] = "#{params[:filename]} has been created"
+    redirect "/"
+  end
+end
+
+post "/copy" do
+  require_signed_in_user
+
+  filename = params[:filename].to_s
+  file_path = File.join(data_path, params[:filename])
+
+  if filename.size == 0
+    session[:message] = "A name is required"
+    status 422
+    erb :copy
+  elsif File.exist?(file_path)
+    session[:message] = "File name in use. Choose a new name."
+    status 422
+    erb :copy
+  elsif ![".txt", ".md"].include?(File.extname(filename))
+    session[:message] = "That file type is not supported"
+    status 422
+    erb :copy
+  else
     File.write(file_path, "")
     session[:message] = "#{params[:filename]} has been created"
     redirect "/"
@@ -167,6 +223,16 @@ post "/:filename/delete" do
   redirect "/"
 end
 
-get "/test/dave" do
-  "testing #{length}"
+get "/:filename/copy" do
+  require_signed_in_user
+
+  file_path = File.join(data_path, params[:filename])
+
+  @filename = params[:filename]
+  @content = File.read(file_path)
+
+  erb :copy
 end
+
+
+

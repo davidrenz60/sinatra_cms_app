@@ -1,0 +1,10 @@
+---
+dave: "$2a$10$5wzNRG5Zl1Q5RENvVP.orur9Z2Rb4uraukppxzdeOYLr/xVLmYvbO"
+sara: "$2a$10$PKY2Y5vCezQNc7gWgFIRauQeFqCWtIK2TsKENCSVkmHhKVS.EuSsC"
+bernie: "$2a$10$OXKeT7eIEvXsNPZrN7Y/G.yV/NgyijV0XucB.YAzM/TB6II0PXBMy"
+test: !ruby/string:BCrypt::Password
+  str: "$2a$10$koBblLbo1LpYZK1kUxQo2Ob.1vGkUz0DUNdeeibefacpWNT.k12su"
+  version: 2a
+  cost: 10
+  salt: "$2a$10$koBblLbo1LpYZK1kUxQo2O"
+  checksum: b.1vGkUz0DUNdeeibefacpWNT.k12su

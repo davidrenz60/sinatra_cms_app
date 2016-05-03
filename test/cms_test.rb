@@ -164,7 +164,7 @@ class AppTest < Minitest::Test
   def test_deleting_document_signed_out
     create_document "sample.txt"
 
-    post "/sample.txt.delete"
+    post "/sample.txt/delete"
     assert_equal 302, last_response.status
     assert_equal "You must be signed in to do that", session[:message]
   end
@@ -210,6 +210,37 @@ class AppTest < Minitest::Test
     post "/create", { filename: "test.abc" }, admin_session
     assert_equal 422, last_response.status
     assert_includes last_response.body, "That file type is not supported"
+  end
+
+  def test_create_filename_already_used
+    create_document "test.txt"
+
+    post "/create", { filename: "test.txt" }, admin_session
+    assert_equal 422, last_response.status
+    assert_includes last_response.body, "File name in use. Choose a new name."
+  end
+
+  def test_copy_file_signed_in
+    create_document "sample.txt", "testing..."
+
+    get "/sample.txt/copy", {}, admin_session
+    assert_equal 200, last_response.status
+    assert_includes last_response.body, "testing..."
+
+    post "/copy", filename: "sample_copy.txt"
+    assert_equal 302, last_response.status
+
+    get last_response["Location"]
+    assert_equal 200, last_response.status
+    assert_includes last_response.body, "sample_copy.txt"
+  end
+
+  def test_copy_file_signed_out
+    create_document "sample.txt"
+
+    get "/sample.txt/copy"
+    assert_equal 302, last_response.status
+    assert_equal "You must be signed in to do that", session[:message]
   end
 end
 
